@@ -1,6 +1,7 @@
 import sqlite3
 
 DB_NAME = 'D:/Web程式設計/bookstore_manager/bookstore.db'
+
 def check_db()->None:
     try:
         print(create_db(DB_NAME))
@@ -10,7 +11,7 @@ def check_db()->None:
         print("")
     #檢查資料表是否存在
 
-def create_db(db_name)-> str:
+def create_db(db_name:str)-> str:
     with sqlite3.connect(db_name) as conn:
         conn.row_factory = sqlite3.Row  # 使查詢結果可以用欄位名稱存取
         cursor = conn.cursor()
@@ -77,8 +78,82 @@ def create_db(db_name)-> str:
         conn.commit()
     return f'{db_name} 產生成功'
 
-def add_salereport():
-    return
+def check_id(db_name:str,mid:str,bid:str)->bool:
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        try:
+            # 檢查會員是否存在
+            cursor.execute('SELECT 1 FROM member WHERE mid = ?', (mid,))
+            member_exists = cursor.fetchone() is not None
+
+            # 檢查書籍是否存在
+            cursor.execute('SELECT 1 FROM book WHERE bid = ?', (bid,))
+            book_exists = cursor.fetchone() is not None
+
+            if not member_exists or not book_exists:
+                return False
+            return True
+        except sqlite3.Error as error:
+            print(f"執行 SELECT 操作時發生錯誤：{error}")
+            return False
+
+def check_stock(db_name:str,sqty:int,bid:str)->str:
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT bstock FROM book WHERE bid = ?", (bid,))
+            result = cursor.fetchone()
+            if sqty > result[0]:
+                return f'=> 錯誤：書籍庫存不足 (現有庫存: {result[0]})'
+        except sqlite3.Error as error:
+            print(f"執行 SELECT 操作時發生錯誤：{error}")
+
+def sub_total(db_name:str,sqty:int,bid:str,sdiscount:int)->int:
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT bprice FROM book WHERE bid = ?", (bid,))
+            result = cursor.fetchone()
+            total =(result[0]*sqty)-sdiscount
+            return total
+        except sqlite3.Error as error:
+            print(f"執行 SELECT 操作時發生錯誤：{error}")
+
+def add_salereport(db_name:str)-> str:
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        while True:
+            sdate = input("請輸入銷售日期 (YYYY-MM-DD)：")
+            if not(len(sdate) == 10 and sdate.count('-') == 2):
+                print("=> 錯誤：日期格式應為 YYYY-MM-DD，請重新輸入")
+                continue   #
+            mid = input("請輸入會員編號：").upper()
+            bid = input("請輸入書籍編號：").upper()
+            try:
+                sqty = int(input("請輸入購買數量："))
+                if sqty < 0:
+                    print("=> 錯誤：數量必須為正整數，請重新輸入")
+            except ValueError as e:
+                print("=> 錯誤：數量必須為整數，請重新輸入")
+            try:
+                sdiscount = int(input("請輸入折扣金額："))
+                if sdiscount < 0:
+                    print("=> 錯誤：折扣必須為正整數，請重新輸入")
+            except ValueError as e:
+                print("=> 錯誤：折扣必須為整數，請重新輸入")
+            if check_id(db_name,mid,bid) == False:
+                print("=> 錯誤：會員編號或書籍編號無效")
+                break
+            stock_msg = check_stock(db_name, sqty, bid)
+            if stock_msg:
+                print(stock_msg)
+                continue
+            stotal = sub_total(db_name,sqty,bid,sdiscount)
+            cursor.execute("INSERT INTO sale (sdate, mid, bid, sqty, sdiscount, stotal) VALUES (?, ?, ?, ?, ?, ?)", (sdate, mid, bid, sqty, sdiscount, stotal))
+            print(f'=> 銷售記錄已新增！(銷售總額: {stotal})')
+            conn.commit()
+            break
+
 
 def main():
     check_db()
@@ -98,7 +173,7 @@ def main():
             break
         elif mode == "1" :
             print(mode)
-            add_sale_report()
+            add_salereport(DB_NAME)
         elif mode == "2" :
             print(mode)
         elif mode == "3" :
