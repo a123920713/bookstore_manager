@@ -3,15 +3,20 @@ import sqlite3
 DB_NAME = 'D:/Web程式設計/bookstore_manager/bookstore.db'
 
 def check_db()->None:
+
+    """檢查資料表是否存在，若不存在則新增資料表。"""
+
     try:
         print(create_db(DB_NAME))
     except sqlite3.IntegrityError :
         print("")
         print("資料表已存在，無須新增資料表")
         print("")
-    #檢查資料表是否存在
 
 def create_db(db_name: str)-> str:
+
+    """建立一個新的資料表"""
+
     with sqlite3.connect(db_name) as conn:
         conn.row_factory = sqlite3.Row  # 使查詢結果可以用欄位名稱存取
         cursor = conn.cursor()
@@ -79,6 +84,9 @@ def create_db(db_name: str)-> str:
     return f'{db_name} 產生成功'
 
 def check_id(db_name: str, mid: str, bid: str)->bool:
+
+    """檢查book_id與menber_id是否存在"""
+
     with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -99,6 +107,9 @@ def check_id(db_name: str, mid: str, bid: str)->bool:
             return False
 
 def check_stock(db_name: str, sqty: int, bid: str)->str:
+
+    """確認書籍的庫存"""
+
     with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -112,6 +123,9 @@ def check_stock(db_name: str, sqty: int, bid: str)->str:
             print(f"執行 SELECT 操作時發生錯誤：{error}")
 
 def sub_total(db_name: str, sqty: int, bid: str, sdiscount: int)->int:
+
+    """計算扣除折扣後的總金額"""
+
     with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -124,6 +138,9 @@ def sub_total(db_name: str, sqty: int, bid: str, sdiscount: int)->int:
             print(f"執行 SELECT 操作時發生錯誤：{error}")
 
 def add_salereport(db_name: str)-> None:
+
+    """新增銷售紀錄"""
+
     with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -169,6 +186,9 @@ def add_salereport(db_name: str)-> None:
             break
 
 def show_salereport(db_name: str)->None:
+
+    """顯示所有銷售紀錄"""
+
     with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -211,6 +231,9 @@ def show_salereport(db_name: str)->None:
             print(f"=> 錯誤：無法查詢銷售資料：{e}")
 
 def get_salereport(db_name: str)->None:
+
+    """取得當前資料表內的銷售紀錄並顯示，確認是否要刪除或修改"""
+
     with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -243,6 +266,9 @@ def get_salereport(db_name: str)->None:
             print(f"=> 錯誤：無法查詢銷售資料：{e}")
 
 def update_salereport(db_name: str) -> None:
+
+    """更新銷售紀錄內容"""
+
     with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -298,6 +324,9 @@ def update_salereport(db_name: str) -> None:
             print(f"=> 更新失敗：{e}")
 
 def delete_salereport(db_name: str)->None:
+
+     """刪除銷售紀錄"""
+
      with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
@@ -329,7 +358,6 @@ def delete_salereport(db_name: str)->None:
         except sqlite3.Error as error:
             print(f"執行 DELETE 操作時發生錯誤：{error}")
 
-
 def main():
     check_db()
     while True:
@@ -346,6 +374,7 @@ def main():
         mode = (input("請選擇操作項目(Enter 離開)：")).strip()
         if mode == "":
             break
+
         elif mode == "1" :
             add_salereport(DB_NAME)
 
